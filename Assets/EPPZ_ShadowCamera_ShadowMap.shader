@@ -32,10 +32,12 @@
 			
 			void main()
 			{
+				// Get depth, pack `float` into RGBA bytes.
 				float depth = gl_FragCoord.z;
-				vec4 debugColor = vec4(depth, depth, depth, 1.0);
 				vec4 packedFloatColor = packFloatToVec4(depth);
 				
+				vec4 debugColor = vec4(depth, depth, depth, 1.0);
+				if (depth > 0.75 && depth < 0.755) debugColor = vec4(1, 0.5, 0.1, 1);
 				// Output.
 				gl_FragColor = debugColor;
 			}

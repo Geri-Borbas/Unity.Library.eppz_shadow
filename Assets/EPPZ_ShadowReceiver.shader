@@ -59,29 +59,20 @@
 			}
 			
 			void main()
-			
 			{
+				// Get shadow camera z-buffer sample for this fragment position.
 				// vec4 packedFloatColor = packFloatToVec4(depth);
 				// vec4 textureColor = texture2D(_MainTex, v_textureCoordinates.xy);
-				vec4 debugColor; 
+				
+				// Get shadow camera fragment depth.
 				float depth = normalizedDepth(v_shadowCamera_Position);
 				
-				if (depth < 0.0) debugColor = vec4(0, 0, 0, 1); //				
+				// Debug.
+				vec4 debugColor; 
+				if (depth < 0.0) debugColor = vec4(0, 0, 0, 1);
 				debugColor = vec4(depth, depth, depth, 1);
-				if (depth > 1.0) debugColor = vec4(1, 1, 1, 1); //
-				
-				
-//				if (depth < -5.0) debugColor = vec4(0, 1, 1, 1.0); //
-//				if (depth > -5.0) debugColor = vec4(0, 1, 1, 1.0); 		// -5 -4	Blue
-//				if (depth > -4.0) debugColor = vec4(0, 1, 0.75, 1.0); 	// -4 -3
-//				if (depth > -3.0) debugColor = vec4(0, 1, 0.5, 1.0);		// -3 -2
-//				if (depth > -2.0) debugColor = vec4(0, 1, 0.25, 1.0);	// -2 -1
-//				if (depth > -1.0) debugColor = vec4(0, 1, 0, 1.0); 		// -1 0 	Green
-//				if (depth > 0.0) debugColor = vec4(1, 0, depth, 1.0); 		// 0 1		Red
-//				if (depth > 1.0) debugColor = vec4(1, 0.25, 0, 1.0); 	// 1 2
-//				if (depth > 2.0) debugColor = vec4(1, 0.5, 0, 1.0);		// 2 3
-//				if (depth > 3.0) debugColor = vec4(1, 0.75, 0, 1.0);		// 3 4
-//				if (depth > 4.0) debugColor = vec4(1, 1, 0, 1.0);		// 4 5		Yellow
+				if (depth > 0.75 && depth < 0.755) debugColor = vec4(0.1, 1, 0.5, 1);				
+				if (depth > 1.0) debugColor = vec4(1, 1, 1, 1);
 				
 				// Output.
 				gl_FragColor = debugColor; // _MainColor;
