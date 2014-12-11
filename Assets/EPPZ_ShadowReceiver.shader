@@ -15,7 +15,6 @@
       		Lighting Off
       		
 			GLSLPROGRAM
-			// #include "UnityCG.glslinc"
 
          	uniform vec4 _MainColor; 
  			uniform sampler2D _MainTex;
@@ -52,21 +51,11 @@
 			
 			float normalizedDepth(float depth)
 			{
-				return depth;
-//			
-//				float m33 = _ShadowProjectionMatrix[2][2];
-//				float m34 = _ShadowProjectionMatrix[2][3];
-//				float near = 1.0; // m34 / (m33 - 1.0);
-//				float far = 6.0; // m34 / (m33 + 1.0);
-//				// return (depth - near) / (far - near);
-//				return depth / (far - near);
-			}
-			
-			float linearizeDepth(const float depth)
-			{
-				float far = 10.0;
-				float near = 2.5;
-				return (2.0 * near) / (far + near - depth * (far - near));
+				float m33 = _ShadowCameraProjectionMatrix[2][2];
+				float m34 = _ShadowCameraProjectionMatrix[2][3];
+				float near = m34 / (m33 - 1.0);
+				float far = m34 / (m33 + 1.0);
+				return depth; // / (far - near);
 			}
 			
 			void main()
@@ -76,17 +65,17 @@
 				// vec4 textureColor = texture2D(_MainTex, v_textureCoordinates.xy);
 				vec4 debugColor; 
 				float position = normalizedDepth(v_shadowCamera_Position.z);
-				if (position < -5.0) debugColor = vec4(0, 1, 1, 1.0);
-				if (position > -5.0) debugColor = vec4(0, 1, 1, 1.0);
-				if (position > -4.0) debugColor = vec4(0, 1, 0.75, 1.0);
-				if (position > -3.0) debugColor = vec4(0, 1, 0.5, 1.0);
-				if (position > -2.0) debugColor = vec4(0, 1, 0.25, 1.0);
-				if (position > -1.0) debugColor = vec4(0, 1, 0, 1.0); // Green
-				if (position > 0.0) debugColor = vec4(1, 0, 0, 1.0); // Red
-				if (position > 1.0) debugColor = vec4(1, 0.25, 0, 1.0); 
-				if (position > 2.0) debugColor = vec4(1, 0.5, 0, 1.0);
-				if (position > 3.0) debugColor = vec4(1, 0.75, 0, 1.0);
-				if (position > 4.0) debugColor = vec4(1, 1, 0, 1.0);
+				if (position < -5.0) debugColor = vec4(0, 1, 1, 1.0); //
+				if (position > -5.0) debugColor = vec4(0, 1, 1, 1.0); 		// -5 -4	Blue
+				if (position > -4.0) debugColor = vec4(0, 1, 0.75, 1.0); 	// -4 -3
+				if (position > -3.0) debugColor = vec4(0, 1, 0.5, 1.0);		// -3 -2
+				if (position > -2.0) debugColor = vec4(0, 1, 0.25, 1.0);	// -2 -1
+				if (position > -1.0) debugColor = vec4(0, 1, 0, 1.0); 		// -1 0 	Green
+				if (position > 0.0) debugColor = vec4(1, 0, 0, 1.0); 		// 0 1		Red
+				if (position > 1.0) debugColor = vec4(1, 0.25, 0, 1.0); 	// 1 2
+				if (position > 2.0) debugColor = vec4(1, 0.5, 0, 1.0);		// 2 3
+				if (position > 3.0) debugColor = vec4(1, 0.75, 0, 1.0);		// 3 4
+				if (position > 4.0) debugColor = vec4(1, 1, 0, 1.0);		// 4 5		Yellow
 				
 				// Output.
 				gl_FragColor = debugColor; // _MainColor;
