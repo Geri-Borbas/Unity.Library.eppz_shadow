@@ -23,6 +23,8 @@
          	uniform mat4 _Object2World; // Advertised by Unity  
          	uniform mat4 _ShadowCameraViewMatrix; // Advertised per shadow camera
          	uniform mat4 _ShadowCameraProjectionMatrix; // Advertised per shadow camera
+         	uniform float _ShadowCameraNearClipPlane;
+         	uniform float _ShadowCameraFarClipPlane;
 						
 			varying vec4 v_textureCoordinates;				
 			varying vec4 v_shadowCamera_Position;
@@ -49,13 +51,11 @@
    				return (dot(value, bitShift));
 			}
 			
-			float normalizedDepth(float depth)
+			float normalizedDepth(vec4 position)
 			{
-				float m33 = _ShadowCameraProjectionMatrix[2][2];
-				float m34 = _ShadowCameraProjectionMatrix[2][3];
-				float near = m34 / (m33 - 1.0);
-				float far = m34 / (m33 + 1.0);
-				return depth; // / (far - near);
+				float near = _ShadowCameraNearClipPlane;
+				float far = _ShadowCameraFarClipPlane;
+				return ((position.z / position.w) + 1.0) / 2.0; // / (far - near);
 			}
 			
 			void main()
@@ -64,18 +64,24 @@
 				// vec4 packedFloatColor = packFloatToVec4(depth);
 				// vec4 textureColor = texture2D(_MainTex, v_textureCoordinates.xy);
 				vec4 debugColor; 
-				float position = normalizedDepth(v_shadowCamera_Position.z);
-				if (position < -5.0) debugColor = vec4(0, 1, 1, 1.0); //
-				if (position > -5.0) debugColor = vec4(0, 1, 1, 1.0); 		// -5 -4	Blue
-				if (position > -4.0) debugColor = vec4(0, 1, 0.75, 1.0); 	// -4 -3
-				if (position > -3.0) debugColor = vec4(0, 1, 0.5, 1.0);		// -3 -2
-				if (position > -2.0) debugColor = vec4(0, 1, 0.25, 1.0);	// -2 -1
-				if (position > -1.0) debugColor = vec4(0, 1, 0, 1.0); 		// -1 0 	Green
-				if (position > 0.0) debugColor = vec4(1, 0, 0, 1.0); 		// 0 1		Red
-				if (position > 1.0) debugColor = vec4(1, 0.25, 0, 1.0); 	// 1 2
-				if (position > 2.0) debugColor = vec4(1, 0.5, 0, 1.0);		// 2 3
-				if (position > 3.0) debugColor = vec4(1, 0.75, 0, 1.0);		// 3 4
-				if (position > 4.0) debugColor = vec4(1, 1, 0, 1.0);		// 4 5		Yellow
+				float depth = normalizedDepth(v_shadowCamera_Position);
+				
+				if (depth < 0.0) debugColor = vec4(0, 0, 0, 1); //				
+				debugColor = vec4(depth, depth, depth, 1);
+				if (depth > 1.0) debugColor = vec4(1, 1, 1, 1); //
+				
+				
+//				if (depth < -5.0) debugColor = vec4(0, 1, 1, 1.0); //
+//				if (depth > -5.0) debugColor = vec4(0, 1, 1, 1.0); 		// -5 -4	Blue
+//				if (depth > -4.0) debugColor = vec4(0, 1, 0.75, 1.0); 	// -4 -3
+//				if (depth > -3.0) debugColor = vec4(0, 1, 0.5, 1.0);		// -3 -2
+//				if (depth > -2.0) debugColor = vec4(0, 1, 0.25, 1.0);	// -2 -1
+//				if (depth > -1.0) debugColor = vec4(0, 1, 0, 1.0); 		// -1 0 	Green
+//				if (depth > 0.0) debugColor = vec4(1, 0, depth, 1.0); 		// 0 1		Red
+//				if (depth > 1.0) debugColor = vec4(1, 0.25, 0, 1.0); 	// 1 2
+//				if (depth > 2.0) debugColor = vec4(1, 0.5, 0, 1.0);		// 2 3
+//				if (depth > 3.0) debugColor = vec4(1, 0.75, 0, 1.0);		// 3 4
+//				if (depth > 4.0) debugColor = vec4(1, 1, 0, 1.0);		// 4 5		Yellow
 				
 				// Output.
 				gl_FragColor = debugColor; // _MainColor;

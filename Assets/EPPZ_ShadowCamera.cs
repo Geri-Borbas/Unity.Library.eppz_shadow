@@ -8,6 +8,8 @@ public class EPPZ_ShadowCamera : MonoBehaviour
 
 	public string viewMatrixPropertyName = "_ShadowCameraViewMatrix";
 	public string projectionMatrixPropertyName = "_ShadowCameraProjectionMatrix";
+	public string nearClipPlanePropertyName = "_ShadowCameraNearClipPlane";
+	public string farClipPlanePropertyName = "_ShadowCameraFarClipPlane";
 	public Material depthMapGeneratingMaterial;
 
 
@@ -34,5 +36,7 @@ public class EPPZ_ShadowCamera : MonoBehaviour
 	{
 		Shader.SetGlobalMatrix(viewMatrixPropertyName, camera.worldToCameraMatrix);
 		Shader.SetGlobalMatrix(projectionMatrixPropertyName, camera.projectionMatrix);
+		Shader.SetGlobalFloat(nearClipPlanePropertyName, camera.nearClipPlane);
+		Shader.SetGlobalFloat(farClipPlanePropertyName, camera.farClipPlane);
 	}
 }
