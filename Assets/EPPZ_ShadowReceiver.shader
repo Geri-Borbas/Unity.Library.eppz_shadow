@@ -27,7 +27,9 @@
          	uniform float _ShadowCameraFarClipPlane;
 						
 			varying vec4 v_textureCoordinates;				
-			varying vec4 v_shadowCamera_Position;
+			varying vec4 v_shadowProjection_Position;
+			varying vec3 v_normal;
+			varying vec3 v_shadowProjection_Normal;			
 			
 			#ifdef VERTEX
 			
@@ -37,9 +39,17 @@
 				gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 				v_textureCoordinates = gl_MultiTexCoord0;       	
 				
+				
 				// Shadow projection (multiplied by shadow camera ModelViewProjection matrix).
 				// Simply like this vertex was filmed from the shadow camera point of view.
-				v_shadowCamera_Position = (_ShadowCameraProjectionMatrix * (_ShadowCameraViewMatrix * (_Object2World * gl_Vertex)));
+				mat4 shadow_ModelViewMatrix = _ShadowCameraViewMatrix * _Object2World;				
+				mat4 shadow_ModelViewProjectionMatrix = _ShadowCameraProjectionMatrix * _ShadowCameraViewMatrix * _Object2World;
+				mat4 shadow_NormalMatrix = shadow_ModelViewMatrix; // transpose(inverse(shadow_ModelViewMatrix));
+				v_shadowProjection_Position = shadow_ModelViewProjectionMatrix * gl_Vertex;
+				
+				// Pass normals.
+				v_normal = gl_NormalMatrix * gl_Normal;
+				v_shadowProjection_Normal = (shadow_NormalMatrix * vec4(gl_Normal, 1.0)).xyz;				
 			}
 			#endif
 
@@ -60,22 +70,67 @@
 			
 			void main()
 			{
-				// Get shadow camera z-buffer sample for this fragment position.
-				// vec4 packedFloatColor = packFloatToVec4(depth);
-				// vec4 textureColor = texture2D(_MainTex, v_textureCoordinates.xy);
+				vec4 outputColor; 
+				float bias = 0.025;
+				
+				// Normalize shadow projection positions.
+				vec4 shadowProjection_Position = v_shadowProjection_Position / v_shadowProjection_Position.w;
+			
+				// Get scene depth sample for this fragment position.
+				vec2 shadowMap_UV = vec2(
+					(shadowProjection_Position.x + 1.0) * 0.5,
+					(shadowProjection_Position.y + 1.0) * 0.5
+					);
+			
+				vec4 sceneDepthSample = texture2D(_ShadowMap, shadowMap_UV);
+				float shadowCameraDepth = sceneDepthSample.r; // unpackFloatFromVec4(sceneDepthSample);
 				
 				// Get shadow camera fragment depth.
-				float depth = normalizedDepth(v_shadowCamera_Position);
+				float shadowProjectionDepth = normalizedDepth(v_shadowProjection_Position);
 				
-				// Debug.
-				vec4 debugColor; 
-				if (depth < 0.0) debugColor = vec4(0, 0, 0, 1);
-				debugColor = vec4(depth, depth, depth, 1);
-				if (depth > 0.75 && depth < 0.755) debugColor = vec4(0.1, 1, 0.5, 1);				
-				if (depth > 1.0) debugColor = vec4(1, 1, 1, 1);
+				// Shadow tests.
+				bool shadowed = (shadowCameraDepth + bias < shadowProjectionDepth);				
+				float shadowDepth = shadowProjectionDepth - shadowCameraDepth;
+				
+				float p = 1.0 - abs(v_shadowProjection_Normal.x);
+				
+				// Color swatches.
+				vec4 whiteColor = vec4(1, 1, 1, 1);
+				vec4 blackColor = vec4(0, 0, 0, 1);
+				
+				vec4 shadowProjectionDepthColor = vec4(shadowProjectionDepth, shadowProjectionDepth, shadowProjectionDepth, 1);				
+				vec4 shadowCameraDepthColor = vec4(shadowCameraDepth, shadowCameraDepth, shadowCameraDepth, 1);
+				vec4 shadowDepthColor = vec4(shadowDepth, shadowDepth, shadowDepth, 1);
+				vec4 inverseShadowDepthColor = 1.0 - shadowDepthColor;
+				
+				vec4 normalColor = vec4(v_normal, 1.0);				
+				vec4 shadowProjectionNormalColor = vec4(v_shadowProjection_Normal, 1.0);
+				vec4 pColor = vec4(p, p, p, 1);
+				
+				// 
+
+				// Key colors.
+				vec4 litColor = whiteColor;
+				vec4 unlitColor = blackColor;
+				vec4 shadowColor = blackColor;
+							
+				// Shadow mix.			
+				vec4 shadowedColor = litColor * (1.0 - shadowDepth);
+				// if (shadowDepth < 0.0) shadowedColor = litColor;
+				
+				outputColor = inverseShadowDepthColor * inverseShadowDepthColor * shadowProjectionDepthColor; // (shadowed) ? shadowedColor : litColor;
+				
+				// Unlit fragments outside shadow camera frustum.
+				if (shadowProjection_Position.x > 1.0) outputColor =  unlitColor;
+				if (shadowProjection_Position.x < -1.0) outputColor =  unlitColor;
+				if (shadowProjection_Position.y > 1.0) outputColor =  unlitColor;
+				if (shadowProjection_Position.y < -1.0) outputColor =  unlitColor;				
+				
+				// Diffuse the rest.
+				// vec4 textureColor = texture2D(_MainTex, v_textureCoordinates.xy);			
 				
 				// Output.
-				gl_FragColor = debugColor; // _MainColor;
+				gl_FragColor =  outputColor; // _MainColor;
 			}
 			#endif
 

@@ -36,8 +36,10 @@
 				float depth = gl_FragCoord.z;
 				vec4 packedFloatColor = packFloatToVec4(depth);
 				
-				vec4 debugColor = vec4(depth, depth, depth, 1.0);
-				if (depth > 0.75 && depth < 0.755) debugColor = vec4(1, 0.5, 0.1, 1);
+				// Debug.
+				vec4 debugColor; 
+				debugColor = vec4(depth, depth, depth, 1);
+				
 				// Output.
 				gl_FragColor = debugColor;
 			}
