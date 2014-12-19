@@ -46,6 +46,7 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\EPPZ_DrawNormals.cs" />
      <Compile Include="Assets\EPPZ_ShadowCamera.cs" />
      <None Include="Assets\EPPZ_ShadowReceiver.shader" />
      <None Include="Assets\EPPZ_ShadowCamera_ShadowMap.shader" />
