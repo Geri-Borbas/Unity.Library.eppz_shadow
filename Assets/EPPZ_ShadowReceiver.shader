@@ -28,8 +28,6 @@
 						
 			varying vec4 v_textureCoordinates;				
 			varying vec4 v_shadowProjection_Position;
-			varying vec3 v_normal;
-			varying vec3 v_shadowProjection_Normal;	
 			varying float v_attenuation;		
 			
 			#ifdef VERTEX
@@ -40,19 +38,13 @@
 				gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 				v_textureCoordinates = gl_MultiTexCoord0;       	
 				
-				
 				// Shadow projection (multiplied by shadow camera ModelViewProjection matrix).
 				// Simply like this vertex was filmed from the shadow camera point of view.
 				mat4 shadow_ModelViewMatrix = _ShadowCameraViewMatrix * _Object2World;				
 				mat4 shadow_ModelViewProjectionMatrix = _ShadowCameraProjectionMatrix * _ShadowCameraViewMatrix * _Object2World;
 				mat4 shadow_NormalMatrix = shadow_ModelViewMatrix; // transpose(inverse(shadow_ModelViewMatrix));
 				v_shadowProjection_Position = shadow_ModelViewProjectionMatrix * gl_Vertex;
-				
-				// Pass normals.
-				
-				v_normal = gl_NormalMatrix * gl_Normal;
-				v_shadowProjection_Normal = (_ShadowCameraProjectionMatrix * vec4(gl_Normal, 1.0)).xyz;
-				
+								
 				// Light.
 				v_attenuation = dot(gl_Normal, vec3(0.0, -1.0, 0.0));
 			}
@@ -97,56 +89,31 @@
 				bool shadowed = (shadowCameraDepth + bias < shadowProjectionDepth);				
 				float shadowDepth = shadowProjectionDepth - shadowCameraDepth;
 				
-				
-				
-				// Color swatches.
-				vec4 whiteColor = vec4(1, 1, 1, 1);
-				vec4 blackColor = vec4(0, 0, 0, 1);
-				
-				vec4 shadowProjectionDepthColor = vec4(shadowProjectionDepth, shadowProjectionDepth, shadowProjectionDepth, 1);				
-				vec4 shadowCameraDepthColor = vec4(shadowCameraDepth, shadowCameraDepth, shadowCameraDepth, 1);
-				vec4 shadowDepthColor = vec4(shadowDepth, shadowDepth, shadowDepth, 1);
-				vec4 inverseShadowDepthColor = 1.0 - shadowDepthColor;
-				
-				vec4 normalColor = vec4(v_normal, 1.0);				
-				vec4 shadowProjectionNormalColor = vec4(v_shadowProjection_Normal, 1.0);
-				vec4 attenuationColor = vec4(v_attenuation, v_attenuation, v_attenuation, 1.0);
-				
 				// Lighting.
+				vec4 lightColor;
+				if (v_attenuation > 0.0)
+				{
+					 lightColor = vec4(0, 0, 0, 1);
+				}
+				else
+				{
+					float lightAttenution = v_attenuation * -1.0;
+					lightColor = vec4(lightAttenution, lightAttenution, lightAttenution, 1.0);
+				}
 				
-					vec4 lightColor;
-					if (v_attenuation > 0.0)
-					{
-						 lightColor = blackColor;
-					}
-					else
-					{
-						float lightAttenution = v_attenuation * -1.0;
-						lightColor = vec4(lightAttenution, lightAttenution, lightAttenution, 1.0);
-					}	
-				
-
-				// Key colors.
-				vec4 litColor = whiteColor;
-				vec4 unlitColor = blackColor;
-				vec4 shadowColor = blackColor;
-							
-				// Shadow mix.			
-				vec4 shadowedColor = litColor * (1.0 - shadowDepth);
-				
-				outputColor = (shadowed) ? blackColor : lightColor;
+				// Blend.
+				vec4 unlitColor = vec4(0, 0, 0, 1);
+				vec4 litColor = lightColor;
+				outputColor = (shadowed) ? unlitColor : litColor;
 				
 				// Unlit fragments outside shadow camera frustum.
 				if (shadowProjection_Position.x > 1.0) outputColor =  unlitColor;
 				if (shadowProjection_Position.x < -1.0) outputColor =  unlitColor;
 				if (shadowProjection_Position.y > 1.0) outputColor =  unlitColor;
-				if (shadowProjection_Position.y < -1.0) outputColor =  unlitColor;				
-				
-				// Diffuse the rest.
-				// vec4 textureColor = texture2D(_MainTex, v_textureCoordinates.xy);			
+				if (shadowProjection_Position.y < -1.0) outputColor =  unlitColor;		
 				
 				// Output.
-				gl_FragColor = outputColor; // _MainColor;
+				gl_FragColor = outputColor;
 			}
 			#endif
 
