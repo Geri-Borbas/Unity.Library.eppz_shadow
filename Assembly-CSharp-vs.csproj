@@ -46,10 +46,12 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\EPPZ_DrawNormals.cs" />
-     <Compile Include="Assets\EPPZ_ShadowCamera.cs" />
-     <None Include="Assets\EPPZ_ShadowReceiver.shader" />
-     <None Include="Assets\EPPZ_ShadowCamera_ShadowMap.shader" />
+     <Compile Include="Assets\EPPZShadow\EPPZ_DrawNormals.cs" />
+     <Compile Include="Assets\EPPZShadow\EPPZ_ShadowCamera.cs" />
+     <None Include="Assets\EPPZShadow\Shaders\EPPZ_ShadowReceiver.shader" />
+     <None Include="Assets\EPPZShadow\Shaders\EPPZ_ShadowReceiver_Depth.shader" />
+     <None Include="Assets\EPPZShadow\Shaders\EPPZ_ShadowCamera_ShadowMap.shader" />
+     <None Include="Assets\EPPZShadow\Shaders\EPPZ_Shadow.glslinc" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -9,26 +9,19 @@
 	
     SubShader
     {   
+    
+    
     	// Test shadow vertex projection depth against shadow map value.
         Pass
       	{
       		Lighting Off
       		
 			GLSLPROGRAM
+         	#include "Assets/EPPZShadow/Shaders/EPPZ_Shadow.glslinc"
 
          	uniform vec4 _MainColor; 
  			uniform sampler2D _MainTex;
-			uniform sampler2D _ShadowMap;
-         	
-         	uniform mat4 _Object2World; // Advertised by Unity  
-         	uniform mat4 _ShadowCameraViewMatrix; // Advertised per shadow camera
-         	uniform mat4 _ShadowCameraProjectionMatrix; // Advertised per shadow camera
-         	uniform float _ShadowCameraNearClipPlane;
-         	uniform float _ShadowCameraFarClipPlane;
-						
-			varying vec4 v_textureCoordinates;				
-			varying vec4 v_shadowProjection_Position;
-			varying float v_attenuation;		
+ 			varying vec4 v_textureCoordinates;		
 			
 			#ifdef VERTEX
 			
@@ -38,32 +31,11 @@
 				gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 				v_textureCoordinates = gl_MultiTexCoord0;       	
 				
-				// Shadow projection (multiplied by shadow camera ModelViewProjection matrix).
-				// Simply like this vertex was filmed from the shadow camera point of view.
-				mat4 shadow_ModelViewMatrix = _ShadowCameraViewMatrix * _Object2World;				
-				mat4 shadow_ModelViewProjectionMatrix = _ShadowCameraProjectionMatrix * _ShadowCameraViewMatrix * _Object2World;
-				mat4 shadow_NormalMatrix = shadow_ModelViewMatrix; // transpose(inverse(shadow_ModelViewMatrix));
-				v_shadowProjection_Position = shadow_ModelViewProjectionMatrix * gl_Vertex;
-								
-				// Light.
-				v_attenuation = dot(gl_Normal, vec3(0.0, -1.0, 0.0));
+				SHADOW_VERTEX;
 			}
 			#endif
 
 			#ifdef FRAGMENT
-			
-			float unpackFloatFromVec4(const vec4 value)
-			{
-   				const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
-   				return (dot(value, bitShift));
-			}
-			
-			float normalizedDepth(vec4 position)
-			{
-				float near = _ShadowCameraNearClipPlane;
-				float far = _ShadowCameraFarClipPlane;
-				return ((position.z / position.w) + 1.0) / 2.0; // / (far - near);
-			}
 			
 			void main()
 			{

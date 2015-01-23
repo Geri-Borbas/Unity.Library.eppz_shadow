@@ -1,0 +1,44 @@
+#ifndef EPPZ_SHADOW
+#define EPPZ_SHADOW
+
+uniform sampler2D _ShadowMap;
+
+uniform mat4 _Object2World; // Advertised by Unity  
+uniform mat4 _ShadowCameraViewMatrix; // Advertised per shadow camera
+uniform mat4 _ShadowCameraProjectionMatrix; // Advertised per shadow camera
+uniform float _ShadowCameraNearClipPlane;
+uniform float _ShadowCameraFarClipPlane;
+
+varying vec4 v_shadowProjection_Position;
+varying float v_attenuation;	
+
+
+// Shadow projection (multiplied by shadow camera ModelViewProjection matrix).
+// Simply like this vertex was "filmed" from the shadow camera point of view. 
+#define SHADOW_VERTEX { \	
+mat4 shadow_ModelViewMatrix = _ShadowCameraViewMatrix * _Object2World; \	
+mat4 shadow_ModelViewProjectionMatrix = _ShadowCameraProjectionMatrix * _ShadowCameraViewMatrix * _Object2World; \
+mat4 shadow_NormalMatrix = shadow_ModelViewMatrix; \
+v_shadowProjection_Position = shadow_ModelViewProjectionMatrix * gl_Vertex; \
+v_attenuation = dot(gl_Normal, vec3(0.0, -1.0, 0.0)); \
+}
+
+float unpackFloatFromVec4(const vec4 value)
+{
+	const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
+	return (dot(value, bitShift));
+}
+
+float normalizedDepth(vec4 position)
+{
+	float near = _ShadowCameraNearClipPlane;
+	float far = _ShadowCameraFarClipPlane;
+	return ((position.z / position.w) + 1.0) / 2.0; // / (far - near);
+}
+
+vec4 colorFromFloat(const float value)
+{
+	return vec4(value, value, value, 1.0);
+}
+
+#endif
